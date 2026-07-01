@@ -1,1 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGOforge - Create Your Perfect Logo</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo-title">🎨 LOGOforge</h1>
+            <p class="tagline">Create Professional Logos in Minutes</p>
+        </div>
+    </header>
 
+    <main class="main-content">
+        <div class="container">
+            <div class="workspace">
+                <!-- Canvas Area -->
+                <div class="canvas-section">
+                    <h2>Logo Preview</h2>
+                    <div class="canvas-wrapper">
+                        <canvas id="logoCanvas" width="500" height="500"></canvas>
+                    </div>
+                    <div class="canvas-buttons">
+                        <button class="btn btn-download" onclick="downloadLogo()">📥 Download PNG</button>
+                        <button class="btn btn-download-svg" onclick="downloadSVG()">📊 Download SVG</button>
+                        <button class="btn btn-reset" onclick="resetCanvas()">🔄 Clear Canvas</button>
+                    </div>
+                </div>
+
+                <!-- Control Panel -->
+                <div class="control-panel">
+                    <!-- Text Section -->
+                    <div class="control-section">
+                        <h3>📝 Text</h3>
+                        <input type="text" id="textInput" placeholder="Enter your text" maxlength="30" class="input-field">
+                        <label>Font Size:</label>
+                        <input type="range" id="fontSize" min="10" max="100" value="40" class="slider">
+                        <span id="fontSizeValue">40</span>px
+                        
+                        <label>Font Style:</label>
+                        <select id="fontFamily" class="select-field">
+                            <option value="Arial">Arial</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Comic Sans MS">Comic Sans MS</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Trebuchet MS">Trebuchet MS</option>
+                        </select>
+                        
+                        <label>Text Color:</label>
+                        <input type="color" id="textColor" value="#000000" class="color-input">
+                    </div>
+
+                    <!-- Shape Section -->
+                    <div class="control-section">
+                        <h3>🔷 Shapes</h3>
+                        <button class="btn-shape" onclick="addShape('circle')">⭕ Circle</button>
+                        <button class="btn-shape" onclick="addShape('square')">▪️ Square</button>
+                        <button class="btn-shape" onclick="addShape('triangle')">▲ Triangle</button>
+                        <button class="btn-shape" onclick="addShape('star')">⭐ Star</button>
+                    </div>
+
+                    <!-- Shape Settings -->
+                    <div class="control-section">
+                        <h3>🎨 Shape Settings</h3>
+                        <label>Shape Color:</label>
+                        <input type="color" id="shapeColor" value="#3498db" class="color-input">
+                        
+                        <label>Shape Size:</label>
+                        <input type="range" id="shapeSize" min="20" max="200" value="100" class="slider">
+                        <span id="shapeSizeValue">100</span>px
+                        
+                        <label>Shape Rotation:</label>
+                        <input type="range" id="shapeRotation" min="0" max="360" value="0" class="slider">
+                        <span id="shapeRotationValue">0</span>°
+                    </div>
+
+                    <!-- Background Section -->
+                    <div class="control-section">
+                        <h3>🌈 Background</h3>
+                        <label>Background Color:</label>
+                        <input type="color" id="bgColor" value="#ffffff" class="color-input">
+                        
+                        <label>Background Style:</label>
+                        <select id="bgStyle" class="select-field" onchange="updateBackground()">
+                            <option value="solid">Solid Color</option>
+                            <option value="gradient">Gradient</option>
+                        </select>
+                        
+                        <label id="bgColor2Label" style="display:none;">Gradient Color 2:</label>
+                        <input type="color" id="bgColor2" value="#e74c3c" class="color-input" style="display:none;">
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="control-section">
+                        <h3>✨ Effects</h3>
+                        <label>Opacity:</label>
+                        <input type="range" id="opacity" min="0" max="100" value="100" class="slider">
+                        <span id="opacityValue">100</span>%
+                        
+                        <label>Shadow:</label>
+                        <input type="checkbox" id="shadowToggle" onchange="updateCanvas()">
+                        
+                        <label>Border:</label>
+                        <input type="checkbox" id="borderToggle" onchange="updateCanvas()">
+                        <input type="color" id="borderColor" value="#000000" class="color-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 LOGOforge. Create Amazing Logos Instantly.</p>
+            <p>Made with 💜 by Creative Team</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
