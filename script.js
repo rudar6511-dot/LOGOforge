@@ -310,3 +310,11 @@ function downloadSVG() {
 window.addEventListener('load', () => {
     updateCanvas();
 });
+fetch("https://api.stability.ai/v1/generate", {
+  method: "POST",
+  headers: { "Authorization": "Bearer YOUR_API_KEY" },
+  body: JSON.stringify({ prompt: "Logo design" })
+})
+.then(res => res.json())
+.then(data => console.log(data))
+.catch(err => console.error(err));
