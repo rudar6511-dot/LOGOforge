@@ -3,122 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOGOforge - Create Your Perfect Logo</title>
+    <title>LOGOforge - AI Logo Generator & Creator</title>
+    <meta name="description" content="Create professional logos with AI or design them yourself. Instant AI logo generation + manual designer.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23667eea'>🎨</text></svg>">
 </head>
 <body>
     <header class="header">
         <div class="container">
-            <h1 class="logo-title">🎨 LOGOforge</h1>
+            <nav class="navbar">
+                <h1 class="logo-title">🎨 LOGOforge</h1>
+                <div class="nav-links">
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#ai-section" class="nav-link">AI Generator</a>
+                    <a href="admin.html" class="nav-link admin-link" style="display:none;">👑 Admin</a>
+                </div>
+            </nav>
             <p class="tagline">Create Professional Logos in Minutes</p>
+            <p class="subtitle">Design manually or let AI create instantly</p>
         </div>
     </header>
 
     <main class="main-content">
         <div class="container">
-            <div class="workspace">
-                <!-- Canvas Area -->
-                <div class="canvas-section">
-                    <h2>Logo Preview</h2>
-                    <div class="canvas-wrapper">
-                        <canvas id="logoCanvas" width="500" height="500"></canvas>
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <h2>Choose Your Path</h2>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" onclick="switchMode('manual')">
+                        ✏️ Manual Design<br><small>Design yourself</small>
+                    </button>
+                    <button class="mode-btn" onclick="switchMode('ai')">
+                        🤖 AI Generator<br><small>Describe & Generate</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manual Design Section -->
+            <div id="manualSection" class="mode-content active">
+                <div class="workspace">
+                    <!-- Canvas Area -->
+                    <div class="canvas-section">
+                        <h2>Live Logo Preview</h2>
+                        <div class="canvas-wrapper">
+                            <canvas id="logoCanvas" width="500" height="500"></canvas>
+                        </div>
+                        <div class="canvas-info">
+                            <span id="canvasInfo">Your logo dimensions: 500x500px</span>
+                        </div>
+                        <div class="canvas-buttons">
+                            <button class="btn btn-download" onclick="downloadLogo()">📥 Download PNG</button>
+                            <button class="btn btn-reset" onclick="resetCanvas()">🔄 Clear</button>
+                        </div>
                     </div>
-                    <div class="canvas-buttons">
-                        <button class="btn btn-download" onclick="downloadLogo()">📥 Download PNG</button>
-                        <button class="btn btn-download-svg" onclick="downloadSVG()">📊 Download SVG</button>
-                        <button class="btn btn-reset" onclick="resetCanvas()">🔄 Clear Canvas</button>
+
+                    <!-- Control Panel -->
+                    <div class="control-panel">
+                        <!-- Text Section -->
+                        <div class="control-section">
+                            <h3>📝 Text</h3>
+                            <input type="text" id="textInput" placeholder="Enter your brand name" maxlength="40" class="input-field">
+                            
+                            <label>Font Size: <span id="fontSizeValue">40</span>px</label>
+                            <input type="range" id="fontSize" min="10" max="120" value="40" class="slider">
+                            
+                            <label>Font Family:</label>
+                            <select id="fontFamily" class="select-field">
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Impact">Impact</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                            </select>
+                            
+                            <label>Text Color:</label>
+                            <input type="color" id="textColor" value="#000000" class="color-input">
+                        </div>
+
+                        <!-- Shape Section -->
+                        <div class="control-section">
+                            <h3>🔷 Shapes</h3>
+                            <div class="shape-grid">
+                                <button class="btn-shape" onclick="addShape('circle')">⭕ Circle</button>
+                                <button class="btn-shape" onclick="addShape('square')">▪️ Square</button>
+                                <button class="btn-shape" onclick="addShape('triangle')">▲ Triangle</button>
+                                <button class="btn-shape" onclick="addShape('star')">⭐ Star</button>
+                            </div>
+                        </div>
+
+                        <!-- Background Section -->
+                        <div class="control-section">
+                            <h3>🌈 Background</h3>
+                            <label>Background Color:</label>
+                            <input type="color" id="bgColor" value="#ffffff" class="color-input">
+                            
+                            <label>Background Style:</label>
+                            <select id="bgStyle" class="select-field" onchange="updateBackground()">
+                                <option value="solid">Solid Color</option>
+                                <option value="gradient">Gradient</option>
+                            </select>
+                            
+                            <label id="bgColor2Label" style="display:none;">Gradient Color 2:</label>
+                            <input type="color" id="bgColor2" value="#e74c3c" class="color-input" style="display:none;">
+                        </div>
+
+                        <!-- Effects Section -->
+                        <div class="control-section">
+                            <h3>✨ Effects</h3>
+                            <label>Opacity: <span id="opacityValue">100</span>%</label>
+                            <input type="range" id="opacity" min="0" max="100" value="100" class="slider">
+                            
+                            <label>
+                                <input type="checkbox" id="shadowToggle" onchange="updateCanvas()">
+                                Add Shadow
+                            </label>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Control Panel -->
-                <div class="control-panel">
-                    <!-- Text Section -->
-                    <div class="control-section">
-                        <h3>📝 Text</h3>
-                        <input type="text" id="textInput" placeholder="Enter your text" maxlength="30" class="input-field">
-                        <label>Font Size:</label>
-                        <input type="range" id="fontSize" min="10" max="100" value="40" class="slider">
-                        <span id="fontSizeValue">40</span>px
-                        
-                        <label>Font Style:</label>
-                        <select id="fontFamily" class="select-field">
-                            <option value="Arial">Arial</option>
-                            <option value="Georgia">Georgia</option>
-                            <option value="Times New Roman">Times New Roman</option>
-                            <option value="Courier New">Courier New</option>
-                            <option value="Verdana">Verdana</option>
-                            <option value="Comic Sans MS">Comic Sans MS</option>
-                            <option value="Impact">Impact</option>
-                            <option value="Trebuchet MS">Trebuchet MS</option>
-                        </select>
-                        
-                        <label>Text Color:</label>
-                        <input type="color" id="textColor" value="#000000" class="color-input">
+            <!-- AI Generator Section -->
+            <div id="aiSection" class="mode-content" style="display:none;">
+                <div class="ai-container">
+                    <h2>🤖 AI Logo Generator</h2>
+                    <p class="ai-description">Describe your logo idea and let AI create it for you!</p>
+                    
+                    <div class="ai-form">
+                        <div class="form-group">
+                            <label for="aiPrompt">Describe Your Logo Idea:</label>
+                            <textarea id="aiPrompt" class="textarea-field" placeholder="e.g., A modern tech company logo with a blue gradient background, featuring an abstract geometric shape representing innovation. Professional, minimalist style." rows="4"></textarea>
+                            <p class="char-count"><span id="charCount">0</span>/500</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="logoStyle">Logo Style:</label>
+                            <select id="logoStyle" class="select-field">
+                                <option value="">Any Style</option>
+                                <option value="minimalist">Minimalist</option>
+                                <option value="geometric">Geometric</option>
+                                <option value="abstract">Abstract</option>
+                                <option value="flat">Flat Design</option>
+                                <option value="3d">3D Style</option>
+                                <option value="vintage">Vintage</option>
+                                <option value="modern">Modern</option>
+                                <option value="playful">Playful</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="logoIndustry">Industry/Category:</label>
+                            <select id="logoIndustry" class="select-field">
+                                <option value="">Any Industry</option>
+                                <option value="tech">Technology</option>
+                                <option value="finance">Finance</option>
+                                <option value="health">Healthcare</option>
+                                <option value="food">Food & Beverage</option>
+                                <option value="retail">Retail</option>
+                                <option value="creative">Creative Services</option>
+                                <option value="sports">Sports</option>
+                                <option value="education">Education</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="colorPreference">Color Preference:</label>
+                            <select id="colorPreference" class="select-field">
+                                <option value="">Any Color</option>
+                                <option value="blue">Blue</option>
+                                <option value="red">Red</option>
+                                <option value="green">Green</option>
+                                <option value="purple">Purple</option>
+                                <option value="orange">Orange</option>
+                                <option value="monochrome">Monochrome</option>
+                                <option value="rainbow">Colorful</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-generate" onclick="generateAILogo()">
+                            <span id="generateBtnText">✨ Generate Logo with AI</span>
+                            <span id="generatingLoader" style="display:none;">⏳ Generating...</span>
+                        </button>
                     </div>
 
-                    <!-- Shape Section -->
-                    <div class="control-section">
-                        <h3>🔷 Shapes</h3>
-                        <button class="btn-shape" onclick="addShape('circle')">⭕ Circle</button>
-                        <button class="btn-shape" onclick="addShape('square')">▪️ Square</button>
-                        <button class="btn-shape" onclick="addShape('triangle')">▲ Triangle</button>
-                        <button class="btn-shape" onclick="addShape('star')">⭐ Star</button>
+                    <!-- Generated Logo Display -->
+                    <div id="aiResultsContainer" style="display:none;" class="ai-results">
+                        <h3>🎉 Your AI Generated Logo</h3>
+                        <div class="ai-logo-display">
+                            <img id="aiGeneratedLogo" src="" alt="AI Generated Logo" class="ai-logo-image">
+                        </div>
+                        <div class="ai-action-buttons">
+                            <button class="btn btn-download" onclick="downloadAILogo()">📥 Download Logo</button>
+                            <button class="btn btn-regenerate" onclick="generateAILogo()">🔄 Try Again</button>
+                            <button class="btn btn-edit" onclick="switchMode('manual')">✏️ Edit in Designer</button>
+                        </div>
+                        <p class="ai-prompt-used">Prompt used: <em id="promptUsed"></em></p>
                     </div>
 
-                    <!-- Shape Settings -->
-                    <div class="control-section">
-                        <h3>🎨 Shape Settings</h3>
-                        <label>Shape Color:</label>
-                        <input type="color" id="shapeColor" value="#3498db" class="color-input">
-                        
-                        <label>Shape Size:</label>
-                        <input type="range" id="shapeSize" min="20" max="200" value="100" class="slider">
-                        <span id="shapeSizeValue">100</span>px
-                        
-                        <label>Shape Rotation:</label>
-                        <input type="range" id="shapeRotation" min="0" max="360" value="0" class="slider">
-                        <span id="shapeRotationValue">0</span>°
+                    <!-- Loading State -->
+                    <div id="aiLoadingState" style="display:none;" class="ai-loading">
+                        <div class="spinner"></div>
+                        <p>🎨 Creating your logo with AI magic...</p>
+                        <p class="small-text">This may take 15-30 seconds</p>
                     </div>
 
-                    <!-- Background Section -->
-                    <div class="control-section">
-                        <h3>🌈 Background</h3>
-                        <label>Background Color:</label>
-                        <input type="color" id="bgColor" value="#ffffff" class="color-input">
-                        
-                        <label>Background Style:</label>
-                        <select id="bgStyle" class="select-field" onchange="updateBackground()">
-                            <option value="solid">Solid Color</option>
-                            <option value="gradient">Gradient</option>
-                        </select>
-                        
-                        <label id="bgColor2Label" style="display:none;">Gradient Color 2:</label>
-                        <input type="color" id="bgColor2" value="#e74c3c" class="color-input" style="display:none;">
+                    <!-- Error State -->
+                    <div id="aiErrorState" style="display:none;" class="ai-error">
+                        <p id="errorMessage"></p>
+                        <button class="btn btn-retry" onclick="generateAILogo()">🔄 Try Again</button>
                     </div>
 
-                    <!-- Filter Section -->
-                    <div class="control-section">
-                        <h3>✨ Effects</h3>
-                        <label>Opacity:</label>
-                        <input type="range" id="opacity" min="0" max="100" value="100" class="slider">
-                        <span id="opacityValue">100</span>%
-                        
-                        <label>Shadow:</label>
-                        <input type="checkbox" id="shadowToggle" onchange="updateCanvas()">
-                        
-                        <label>Border:</label>
-                        <input type="checkbox" id="borderToggle" onchange="updateCanvas()">
-                        <input type="color" id="borderColor" value="#000000" class="color-input">
+                    <!-- Gallery Section -->
+                    <div class="ai-gallery">
+                        <h3>📸 Recent AI Logos</h3>
+                        <div id="logoGallery" class="gallery-grid">
+                            <!-- Gallery items will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <div class="container">
+                <h2>Why Choose LOGOforge?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡</span>
+                        <h3>AI Powered</h3>
+                        <p>Instant logo generation using Stability AI</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">✏️</span>
+                        <h3>Manual Design</h3>
+                        <p>Full design tools for custom creations</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🎨</span>
+                        <h3>Fully Customizable</h3>
+                        <p>100+ customization options</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">💾</span>
+                        <h3>Easy Export</h3>
+                        <p>Download in PNG format instantly</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔐</span>
+                        <h3>Secure</h3>
+                        <p>Your designs are private and protected</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⚙️</span>
+                        <h3>Admin Control</h3>
+                        <p>Full admin dashboard for tracking</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 LOGOforge. Create Amazing Logos Instantly.</p>
-            <p>Made with 💜 by Creative Team</p>
+            <p>&copy; 2026 LOGOforge. All Rights Reserved.</p>
+            <p>AI-Powered Logo Design | Manual Creator | Professional Tools</p>
         </div>
     </footer>
 
