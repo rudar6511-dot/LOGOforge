@@ -1,11 +1,4 @@
-// Backend Configuration
-const CONFIG = {
-    API_BASE: 'http://localhost:5000/api',
-    STABILITY_AI_KEY: process.env.STABILITY_AI_KEY || '', // Will be set from backend
-    DB_URL: process.env.DB_URL || 'mongodb://localhost:27017/logoforge'
-};
-
-// ============== Express Server Setup ==============
+// ============== Express Server Setup with Stability AI ==============
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -18,7 +11,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../')));
 
 // File upload setup
@@ -37,7 +31,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// In-memory database (for demo - use MongoDB in production)
+// In-memory database
 const logoDatabase = {
     logos: [],
     users: [],
@@ -55,76 +49,97 @@ const logoDatabase = {
 app.post('/api/generate-ai-logo', async (req, res) => {
     try {
         const { prompt, style, industry, color } = req.body;
+        const apiKey = process.env.STABILITY_AI_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({
+                success: false,
+                error: 'API Key not configured',
+                message: 'Please set STABILITY_AI_KEY in .env file'
+            });
+        }
 
         // Enhance prompt
         let enhancedPrompt = `Professional logo design: ${prompt}`;
         if (style) enhancedPrompt += `, ${style} style`;
         if (industry) enhancedPrompt += `, for ${industry} industry`;
         if (color) enhancedPrompt += `, with ${color} colors`;
-        enhancedPrompt += `. High quality, modern, professional, clean design, transparent background, PNG format`;
+        enhancedPrompt += `. High quality, modern, professional, clean design. Size: 1024x1024`;
 
         console.log('📝 Enhanced Prompt:', enhancedPrompt);
+        console.log('🔑 Using API Key:', apiKey.substring(0, 10) + '...');
 
-        // Call Stability AI API
-        const response = await axios.post(
-            'https://api.stability.ai/v1/generation/stable-diffusion-3-large/text-to-image',
-            {
-                prompt: enhancedPrompt,
-                output_format: 'png',
-                negative_prompt: 'text, watermark, blurry, low quality, distorted'
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.STABILITY_AI_KEY}`,
-                    'Accept': 'image/*'
+        try {
+            // Call Stability AI API
+            const response = await axios.post(
+                'https://api.stability.ai/v1/generation/stable-diffusion-3-large/text-to-image',
+                {
+                    prompt: enhancedPrompt,
+                    output_format: 'png',
+                    negative_prompt: 'text, watermark, blurry, low quality, distorted, ugly'
                 },
-                responseType: 'arraybuffer'
+                {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Accept': 'image/png'
+                    },
+                    timeout: 60000,
+                    responseType: 'arraybuffer'
+                }
+            );
+
+            // Save logo to disk
+            const logoId = `logo-${Date.now()}`;
+            const logoDir = path.join(__dirname, '../logos');
+            
+            if (!fs.existsSync(logoDir)) {
+                fs.mkdirSync(logoDir, { recursive: true });
             }
-        );
+            
+            const logoPath = path.join(logoDir, `${logoId}.png`);
+            fs.writeFileSync(logoPath, response.data);
 
-        // Save logo to disk
-        const logoId = `logo-${Date.now()}`;
-        const logoPath = path.join(__dirname, '../logos', `${logoId}.png`);
-        
-        if (!fs.existsSync(path.join(__dirname, '../logos'))) {
-            fs.mkdirSync(path.join(__dirname, '../logos'), { recursive: true });
+            console.log('✅ Logo saved to:', logoPath);
+
+            // Store in database
+            const logoData = {
+                id: logoId,
+                type: 'ai',
+                prompt: prompt,
+                enhancedPrompt: enhancedPrompt,
+                style: style,
+                industry: industry,
+                color: color,
+                filePath: `/logos/${logoId}.png`,
+                url: `/logos/${logoId}.png`,
+                createdAt: new Date(),
+                timestamp: Date.now(),
+                size: response.data.length
+            };
+
+            logoDatabase.logos.push(logoData);
+            logoDatabase.analytics.totalLogos++;
+            logoDatabase.analytics.aiLogos++;
+
+            res.json({
+                success: true,
+                message: 'Logo generated successfully',
+                logo: logoData,
+                imageUrl: `/logos/${logoId}.png`
+            });
+
+        } catch (apiError) {
+            console.error('❌ Stability AI Error:', apiError.response?.data || apiError.message);
+            throw apiError;
         }
-        
-        fs.writeFileSync(logoPath, response.data);
-
-        // Store in database
-        const logoData = {
-            id: logoId,
-            type: 'ai',
-            prompt: prompt,
-            enhancedPrompt: enhancedPrompt,
-            style: style,
-            industry: industry,
-            color: color,
-            filePath: `/logos/${logoId}.png`,
-            url: `/logos/${logoId}.png`,
-            createdAt: new Date(),
-            timestamp: Date.now(),
-            size: response.data.length
-        };
-
-        logoDatabase.logos.push(logoData);
-        logoDatabase.analytics.totalLogos++;
-        logoDatabase.analytics.aiLogos++;
-
-        res.json({
-            success: true,
-            message: 'Logo generated successfully',
-            logo: logoData,
-            imageUrl: `/logos/${logoId}.png`
-        });
 
     } catch (error) {
-        console.error('❌ AI Logo Generation Error:', error.message);
+        console.error('❌ Error:', error.message);
         res.status(500).json({
             success: false,
             error: 'Failed to generate logo',
-            message: error.message
+            message: error.message,
+            details: error.response?.data
         });
     }
 });
@@ -139,8 +154,8 @@ app.post('/api/save-manual-logo', upload.single('logo'), async (req, res) => {
             id: logoId,
             type: 'manual',
             text: text,
-            style: JSON.parse(style),
-            colors: JSON.parse(colors),
+            style: JSON.parse(style || '{}'),
+            colors: JSON.parse(colors || '{}'),
             filePath: `/logos/${req.file.filename}`,
             url: `/logos/${req.file.filename}`,
             createdAt: new Date(),
@@ -179,17 +194,22 @@ app.get('/api/logos', (req, res) => {
 
     if (search) {
         filtered = filtered.filter(logo =>
-            logo.prompt?.toLowerCase().includes(search.toLowerCase()) ||
-            logo.text?.toLowerCase().includes(search.toLowerCase())
+            (logo.prompt && logo.prompt.toLowerCase().includes(search.toLowerCase())) ||
+            (logo.text && logo.text.toLowerCase().includes(search.toLowerCase()))
         );
     }
 
-    const paginated = filtered.reverse().slice(skip, skip + limit);
+    const paginated = filtered.reverse().slice(parseInt(skip), parseInt(skip) + parseInt(limit));
 
     res.json({
         success: true,
         total: filtered.length,
-        logos: paginated
+        logos: paginated,
+        stats: {
+            totalLogos: logoDatabase.logos.length,
+            aiLogos: logoDatabase.logos.filter(l => l.type === 'ai').length,
+            manualLogos: logoDatabase.logos.filter(l => l.type === 'manual').length
+        }
     });
 });
 
@@ -271,7 +291,7 @@ app.get('/api/dashboard-stats', (req, res) => {
         totalLogos: logoDatabase.logos.length,
         aiLogos: logoDatabase.logos.filter(l => l.type === 'ai').length,
         manualLogos: logoDatabase.logos.filter(l => l.type === 'manual').length,
-        activeUsers: 1, // In production, track real sessions
+        activeUsers: 1,
         recentActivity: logoDatabase.logos.slice(-10).reverse()
     };
 
@@ -281,29 +301,7 @@ app.get('/api/dashboard-stats', (req, res) => {
     });
 });
 
-// 8. Track User Activity
-app.post('/api/track-activity', (req, res) => {
-    const { userId, action, type, data } = req.body;
-
-    const activity = {
-        userId: userId || 'anonymous',
-        action: action,
-        type: type,
-        data: data,
-        timestamp: Date.now(),
-        userAgent: req.headers['user-agent']
-    };
-
-    // Store activity (in production, use database)
-    logoDatabase.users.push(activity);
-
-    res.json({
-        success: true,
-        message: 'Activity tracked'
-    });
-});
-
-// 9. Health Check
+// 8. Health Check
 app.get('/api/health', (req, res) => {
     res.json({
         success: true,
@@ -324,6 +322,10 @@ app.listen(PORT, () => {
     ║                                    ║
     ║   Server running on port ${PORT}    ║
     ║   API: http://localhost:${PORT}/api   ║
+    ║   Frontend: http://localhost:${PORT}  ║
+    ║   Admin: http://localhost:${PORT}/admin.html ║
+    ║                                    ║
+    ║   Stability AI: ${process.env.STABILITY_AI_KEY ? '✅ Configured' : '❌ Missing'} ║
     ╚════════════════════════════════════╝
     `);
 });
