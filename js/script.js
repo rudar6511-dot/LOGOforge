@@ -3,7 +3,7 @@
 // Global State
 const state = {
     mode: 'manual', // 'manual' or 'ai'
-    apiBase: 'http://localhost:5000/api',
+    apiBase: 'http://localhost:8000/api',
     currentMode: 'manual',
     
     // Manual Designer State
