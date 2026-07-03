@@ -559,5 +559,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Check API connection
 fetch(state.apiBase + '/health').catch(() => {
-    console.warn('⚠️ Backend not connected. Make sure to run: npm install && npm start');
+    console.warn
 });
