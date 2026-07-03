@@ -23,7 +23,7 @@ const state = {
     
     // AI State
     aiPrompt: '',
-    aiGenerating: false,
+    aiGenerating: ,
     aiLogos: []
 };
 
