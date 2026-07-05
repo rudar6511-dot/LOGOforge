@@ -318,3 +318,64 @@ fetch("https://api.stability.ai/v1/generate", {
 .then(res => res.json())
 .then(data => console.log(data))
 .catch(err => console.error(err));
+async function generateAILogo() {
+  const brandName = document.getElementById("brandName")?.value || "LogoForge";
+  const industry = document.getElementById("industry")?.value || "Business";
+  const style = document.getElementById("style")?.value || "Modern";
+  const colors = document.getElementById("colors")?.value || "Blue and purple";
+
+  const button = document.getElementById("generateBtn");
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Generating...";
+    }
+
+    const response = await fetch(
+      "https://YOUR-VERCEL-PROJECT.vercel.app/api/generate-logo",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brandName,
+          industry,
+          style,
+          colors,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "AI logo generation failed");
+    }
+
+    const imageBlob = await response.blob();
+    const imageUrl = URL.createObjectURL(imageBlob);
+
+    const preview = document.getElementById("logoPreview");
+
+    if (preview) {
+      preview.innerHTML = `
+        <img 
+          src="${imageUrl}" 
+          alt="Generated AI logo" 
+          style="max-width: 100%; border-radius: 16px;"
+        />
+      `;
+    } else {
+      window.open(imageUrl, "_blank");
+    }
+  } catch (error) {
+    alert("AI logo generate nahi hua: " + error.message);
+    console.error(error);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Generate Logo";
+    }
+  }
+}
